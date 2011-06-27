@@ -1,0 +1,1 @@
+This is a CGI script I wrote a while back in Tcl that randomly distributes 7 hands from a 52 cards deck, identifies the hands, and ranks them in order. Take from it what you will, I haven't touched it in years. I may write this as something more usable. Let me know.

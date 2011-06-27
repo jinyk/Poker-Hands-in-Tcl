@@ -1,0 +1,39 @@
+###############################################################
+# proc: uncgi
+#
+# this procedure undos the encodeing done by cgi
+###############################################################
+proc uncgi {buf} {
+	regsub -all {\\(.)} $buf {\1} buf ;
+	regsub -all {([[$"])} $buf {\\\1} buf;
+	regsub -all {\+} $buf { } buf
+	regsub -all -nocase {%([a-fA-F0-9][a-fA-F0-9])} $buf {[format %c 0x\1]} buf
+	eval return \"$buf\"
+}
+###############################################################
+# proc: place_cgi_args
+#
+# takes one argument "c_a" in which all contents of the post
+# method is placed as an array.
+###############################################################
+proc place_cgi_args {c_a} {
+	global env
+	upvar $c_a cgi_args
+
+	switch $env(REQUEST_METHOD) {
+		POST		{set rdata [read stdin $env(CONTENT_LENGTH)]} 
+		GET		{set rdata $env(QUERY_STRING)}
+		default 	{return}
+	}
+	set args_l [split $rdata &]
+	foreach i $args_l {
+		set name_arg [split $i =]
+		set temp_name [lindex $name_arg 0]
+		set name [uncgi $temp_name]
+		if {[regsub -all {\+} [lindex $name_arg 1] " " temp_arg] == 0} {
+			set temp_arg [lindex $name_arg 1]
+		}
+		set arg [uncgi $temp_arg]
+		set cgi_args($name) "$arg"
+	}
+}

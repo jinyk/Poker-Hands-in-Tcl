@@ -1,0 +1,636 @@
+################################################################################
+#  Tcl Procedure: html_escape
+#* Purpose:	Return the given test, with HTML entities escaped. ie change
+#*				< to &lt;, & to &amp;, " to &quot;, etc.
+#  Arguments:
+#arg text: The text to escape and return.
+################################################################################
+
+proc html_escape {text} {
+	# We had better do the ampersands first
+	regsub -all {\&} $text {\&amp;} text
+
+	regsub -all {<} $text {\&lt;} text
+	regsub -all {<} $text {\&lt;} text
+	regsub -all {>} $text {\&gt;} text
+	regsub -all {"} $text {\&quot;} text
+	return $text
+}
+
+################################################################################
+#  Tcl Procedure: html_image
+#* Purpose:	Output an HTML image tag
+#  Arguments:
+#arg imgname: URL to the source of the image
+#arg alttext: Text to show if the browser is not showing images
+#arg align: Alignment of the image relative to text top/middle/bottom
+################################################################################
+
+proc html_image {imgname {alttext ""} {align ""}} {
+	set THELINE ""
+	append THELINE "<IMG SRC=\"$imgname\""
+	if {$alttext != ""} {
+		append THELINE " ALT=\"$alttext\""
+	}
+	if {$align != ""} {
+		append THELINE " ALIGN=\"$align\""
+	}
+	append THELINE ">"
+	puts "$THELINE"
+}
+
+################################################################################
+#  Tcl Procedure: html_begin_no_body
+#* Purpose:	Output the beginning of an HTML document, including the Content-type
+#*		header, the open <HTML> tag, the <HEAD> element (including the title).
+#*		However, this does not output the <BODY> tag. (for use in frameset
+#*		documents.)
+#  Arguments:
+#arg title: The title for the outputted HTML document.
+################################################################################
+
+proc html_begin_no_body {title} {
+	puts "Content-type: text/html\n"
+	puts "<HTML><HEAD><TITLE>"
+	puts "$title"
+	puts "</TITLE></HEAD>"
+}
+
+################################################################################
+#  Tcl Procedure: html_begin
+#* Purpose:	Output the beginning of an HTML document, including the Content-type
+#*		header, the open <HTML> tag, the <HEAD> element (including the title),
+#*		and the opening <BODY> tag.
+#  Arguments:
+#arg title: The title for the HTML document
+################################################################################
+
+proc html_begin {title {bgcolor white} {textcolor black}} {
+	puts "Content-type: text/html\n"
+	puts "<HTML><HEAD><TITLE>"
+	puts "$title"
+	puts "</TITLE></HEAD><BODY BGCOLOR=$bgcolor TEXT=$textcolor>"
+}
+
+################################################################################
+#  Tcl Procedure: html_end
+#* Purpose:	Output the closing BODY and HTML tags.
+#  Arguments:	None
+################################################################################
+
+proc html_end {} {
+	puts "</BODY></HTML>"
+}
+
+################################################################################
+#  Tcl Procedure: html_hr
+#* Purpose:	Output the HTML code to generate a horizontal line
+#  Arguments:
+#arg size: Width of line, in pixels.
+################################################################################
+
+proc html_hr {{width 100%} {size 1}} {
+	puts "<HR SIZE=$size WIDTH=$width>"
+}
+
+################################################################################
+#  Tcl Procedure: html_form_begin
+#* Purpose:	Output the HTML code to begin a new form
+#  Arguments:
+#arg method: Method to transmit the data to the server, usually GET or POST
+#arg url: URL to receive the form data upon submission
+#arg encoding: Type of encoding used for the arguments
+#arg name: Form's symbolic name
+#arg onsubmit: JavaScript code to be executed when the form is submitted.
+################################################################################
+
+proc html_form_begin {method url {encoding "application/x-www-form-urlencoded"} {name null} {onsubmit null}} {
+	set retdata "<FORM METHOD=\"$method\" ACTION=\"$url\" ENCTYPE=\"$encoding\""
+	if {[string compare $name null] != 0} {
+		append retdata " NAME=\"$name\""
+	}
+	if {[string compare $onsubmit null] != 0} {
+		append retdata " onSubmit=\"$onsubmit\""
+	}
+	append retdata ">"
+	puts $retdata
+}
+
+################################################################################
+#  Tcl Procedure: html_header
+#* Purpose:	Output the given text as an HTML heading
+#  Arguments:
+#arg headertext: The text to output as a header
+#arg level: The heading level, from 1 to 6
+#arg align: The alignment of the header, left/right/center
+################################################################################
+
+proc html_header {headertext {level 1} {align null}} {
+	set thestr "$level"
+	if {[string compare "$align" "null"] != 0} {
+		append thestr " ALIGN=$align"
+	}
+	puts "<H$thestr>$headertext</H$level>"
+}
+
+################################################################################
+#  Tcl Procedure: html_form_end
+#* Purpose:	Output the closing tag for a form.
+#  Arguments:	None
+################################################################################
+
+proc html_form_end {} {
+	puts "</FORM>"
+}
+
+################################################################################
+#  Tcl Procedure: html_form_hidden
+#* Purpose:	Output a hidden HTML form element.
+#  Arguments:
+#arg name: Hidden element's name
+#arg value: Hidden element's data
+################################################################################
+
+proc html_form_hidden {name value} {
+	puts "<INPUT TYPE=\"HIDDEN\" NAME=\"$name\" VALUE=\"[html_escape $value]\">"
+}
+
+################################################################################
+#  Tcl Procedure: html_form_text
+#* Purpose:	Output an HTML form text element
+#  Arguments:
+#arg name: Text element's name
+#arg size: Size, in character, of the textbox
+#arg default: Default contents of the textbox
+#arg otherstuff: Extra items to put inside the <INPUT> tag
+################################################################################
+
+proc html_form_text {name {size null} {default ""} {otherstuff ""}} {
+	set THELINE "<INPUT TYPE=\"TEXT\" NAME=\"$name\""
+	if {[string compare "$size" null] != 0} {
+		append THELINE " SIZE=$size"
+	}
+	append THELINE " VALUE=\"[html_escape $default]\" $otherstuff>"
+	puts "$THELINE"
+}
+
+################################################################################
+#  Tcl Procedure: html_form_file
+#* Purpose:	Output an HTML file-upload form element
+#  Arguments:
+#arg name: Name for the file-upload element
+#arg size: Size of the element (see HTML documentation)
+################################################################################
+
+proc html_form_file {name {size null}} {
+	set THELINE "<INPUT TYPE=\"FILE\" NAME=\"$name\""
+	if {[string compare "$size" null] != 0} {
+		append THELINE " SIZE=$size"
+	}
+	append THELINE ">"
+	puts "$THELINE"
+}
+
+################################################################################
+#  Tcl Procedure: html_form_password
+#* Purpose:	Output an HTML password form element
+#  Arguments:
+#arg name: Name for the password input box
+#arg size: Size, in characters, for the password input box
+################################################################################
+
+proc html_form_password {name {size null}} {
+	set THELINE "<INPUT TYPE=\"PASSWORD\" NAME=\"$name\""
+	if {[string compare "$size" null] != 0} {
+		append THELINE " SIZE=$size"
+	}
+	append THELINE ">"
+	puts "$THELINE"
+}
+
+################################################################################
+#  Tcl Procedure: html_form_reset
+#* Purpose:	Output an HTML form reset button
+#  Arguments:
+#arg name: Name to display on the reset button
+################################################################################
+
+proc html_form_reset {name} {
+	puts "<INPUT TYPE=\"RESET\" VALUE=\"$name\">"
+}
+
+################################################################################
+#  Tcl Procedure: html_form_submit
+#* Purpose:	Output an HTML form submit button
+#  Arguments:
+#arg name: Name to display on the submit button
+################################################################################
+
+proc html_form_submit {name} {
+	puts "<INPUT TYPE=\"SUBMIT\" VALUE=\"$name\">"
+}
+
+################################################################################
+#  Tcl Procedure: html_form_button
+#* Purpose:	Output an HTML form button, which executes JavaScript code when clicked.
+#  Arguments:
+#arg name: Name to display on the button
+#arg onclick: JavaScript code to run when the button is clicked
+################################################################################
+
+proc html_form_button {name onclick} {
+	puts "<INPUT TYPE=\"BUTTON\" NAME=\"$name\" VALUE=\"$name\" onClick=\"$onclick\">"
+}
+
+################################################################################
+#  Tcl Procedure: html_form_textarea
+#* Purpose:	Output an HTML multi-line text input form element
+#  Arguments:
+#arg name: Symbolic name for the text field
+#arg rows: Number of lines for the field
+#arg cols: Number of characters per line
+#arg wrap: Word wrapping type: PHYSICAL/VIRTUAL/NONE (see HTML docs)
+#arg default: Text that is in the field by default
+################################################################################
+
+proc html_form_textarea {name {rows null} {cols null} {wrap null} {default null}} {
+	set THELINE "<TEXTAREA NAME=\"$name\""
+	if {[string compare "$rows" "null"] != 0} {
+		append THELINE " ROWS=$rows"
+	}
+	if {[string compare "$cols" "null"] != 0} {
+		append THELINE " COLS=$cols"
+	}
+	if {[string compare "$wrap" "null"] != 0} {
+		append THELINE " WRAP=$wrap"
+	}
+
+	append THELINE ">"
+	if {[string compare "$default" "null"] != 0} {
+		append THELINE "$default"
+	}
+	append THELINE "</TEXTAREA>"
+
+	puts "$THELINE"
+}
+
+################################################################################
+#  Tcl Procedure: html_form_checkbox
+#* Purpose:	Output a checkbox HTML form element
+#  Arguments:
+#arg name: Name of the checkbox element
+#arg checked: 1 or 0, does this box default to checked?
+#arg value: Value to be sent to the server if the box is checked
+################################################################################
+
+proc html_form_checkbox {name {checked 0} {value on}} {
+	set THELINE "<INPUT TYPE=\"CHECKBOX\" NAME=\"$name\" VALUE=\"$value\""
+	if {$checked != 0} {
+		append THELINE " CHECKED"
+	}
+	append THELINE ">"
+	puts "$THELINE"
+}
+
+################################################################################
+#  Tcl Procedure: html_form_radio
+#* Purpose:	Output an HTML radio button form element
+#  Arguments:
+#arg name: Name for the group of radio buttons
+#arg value: Value to be sent to the server if *this* button is selected
+#arg checked: 1 or 0, does this button default to being selected?
+#arg onclick: JavaScript event handler for when the button is clicked
+################################################################################
+
+proc html_form_radio {name value {checked 0} {onclick null}} {
+	set THELINE "<INPUT TYPE=\"RADIO\" NAME=\"$name\" VALUE=\"$value\""
+	if {$checked != 0} {
+		append THELINE " CHECKED"
+	}
+	if {[string compare $onclick "null"] != 0} {
+		append THELINE " onClick=\"$onclick\""
+	}
+	append THELINE ">"
+	puts "$THELINE"
+}
+
+################################################################################
+#  Tcl Procedure: html_form_select
+#* Purpose:	Output a listbox HTML form element
+#  Arguments:
+#arg name: Name for the listbox
+#arg size: Height of the listbox, or 1 to make a drop-down listbox
+#arg list: A Tcl list containing the data to fill the listbox
+#arg index: Zero-based index of the item that should default to being selected
+################################################################################
+
+proc html_form_select {name size list {index 0}} {
+        puts "<Select name=\"$name\" size=$size>"
+        foreach ITEM "$list" {
+                if {[lindex "$list" $index] == $ITEM} {
+                        puts "<Option SELECTED>$ITEM"
+                } else {
+                puts "<Option>$ITEM"
+                }
+        }
+        puts {</Select>}
+}
+
+################################################################################
+#  Tcl Procedure: html_text
+#* Purpose:	Output whatever is input
+#  Arguments:
+#arg text: Text to output
+################################################################################
+
+proc html_text {text} {
+	puts "$text"
+}
+
+################################################################################
+#  Tcl Procedure: html_link
+#* Purpose:	Output the HTML for a hyperlink
+#  Arguments:
+#arg linktext: Text to be made into a link
+#arg linkurl: URL to link to
+#arg target: Frame/Window to put the link in when clicked
+#arg onover: JavaScript event handler for when the mouse is over the link
+################################################################################
+
+proc html_link {linktext linkurl {target null} {onover null}} {
+	set THELINE "<A HREF=\"$linkurl\""
+	if {[string compare $target null] != 0} {append THELINE " TARGET=\"$target\""}
+	if {[string compare $onover null] != 0} {
+		append THELINE " onMouseOver=\"$onover\""
+	}
+	append THELINE ">$linktext</A>"
+	puts $THELINE
+}
+
+################################################################################
+#  Tcl Procedure: html_link_image
+#* Purpose:	Output the HTML for a hyperlinked image
+#  Arguments:
+#arg imgname: URL to the image
+#arg linkurl: URL to link to
+#arg alttext: Alternate text to show if image is not loaded
+#arg align: Alignment of image
+#arg target: Frame/Window to put the link in when clicked
+################################################################################
+
+proc html_link_image {imgname linkurl {alttext ""} {align ""} {target null}} {
+	set THELINE "<A HREF=\"$linkurl\""
+	if {![string compare $target" null] == 0} {append THELINE " TARGET=\"$target\""}
+	append THELINE ">"
+	append THELINE "<IMG SRC=\"$imgname\""
+	if {$alttext != ""} {
+		append THELINE " ALT=\"$alttext\""
+	}
+	if {$align != ""} {
+		append THELINE " ALIGN=\"$align\""
+	}
+	append THELINE ">"
+	append THELINE "</A>"
+	puts $THELINE
+}
+
+################################################################################
+#  Tcl Procedure: html_table_begin
+#* Purpose:	Output the HTML to begin a new table
+#  Arguments:
+#arg border: Border in pixels of the table cells, or 0 for none
+#arg width: Width in percentage of the table
+################################################################################
+
+proc html_table_begin {{border none} {width null}} {
+	set THELINE ""
+	append THELINE "<TABLE"
+	if {$border != "none"} {
+		append THELINE " BORDER=$border"
+	}
+	if {$width != "null"} {
+		append THELINE " WIDTH=$width"
+	}
+	append THELINE ">"
+	puts "$THELINE"
+}
+
+################################################################################
+#  Tcl Procedure: html_table_end
+#* Purpose:	Output the HTML to end a table
+#  Arguments:	None
+################################################################################
+
+proc html_table_end {} {
+	puts "</TABLE>"
+}
+
+################################################################################
+#  Tcl Procedure: html_table_row_begin
+#* Purpose:	Output the HTML to be a row in a table
+#  Arguments:
+#arg align: Alignment of the cells in the row (left/right/center)
+#arg valign: Vertical alignment of cells in row (top/middle/bottom)
+################################################################################
+
+proc html_table_row_begin {{align null} {valign null}} {
+	set THELINE ""
+	append THELINE "<TR"
+	if {$align != "null"} {
+		append THELINE " ALIGN=$align"
+	}
+	if {$valign != "null"} {
+		append THELINE " VALIGN=$valign"
+	}
+	append THELINE ">"
+	puts "$THELINE"
+}
+
+################################################################################
+#  Tcl Procedure: html_table_row_end
+#* Purpose:	Output the HTML to end a table row
+#  Arguments:	None
+################################################################################
+
+proc html_table_row_end {} {
+	puts "</TR>"
+}
+
+################################################################################
+#  Tcl Procedure: html_table_cell_begin
+#* Purpose:	Output the HTML to begin a table cell
+#  Arguments:
+#arg nowrap: If not null, the text in the cell will not word wrap
+#arg align: Horizontal alignment of the data in the cell
+#arg valign: Vertical alignment of the data in the cell
+################################################################################
+
+proc html_table_cell_begin {{align null} {colspan null} {nowrap null} {valign null}} {
+	set THELINE ""
+	append THELINE "<TD"
+	if {$align != "null"} {
+		append THELINE " ALIGN=$align"
+	}
+	if {$valign != "null"} {
+		append THELINE " VALIGN=$valign"
+	}
+	if {$colspan != "null"} {
+		append THELINE " COLSPAN=$colspan"
+	}
+	if {$nowrap != "null"} {
+		append THELINE " NOWRAP"
+	}
+	append THELINE ">"
+	puts "$THELINE"
+}
+
+################################################################################
+#  Tcl Procedure: html_table_cell_end
+#* Purpose:	Output the HTML to end a table cell
+#  Arguments:	None
+################################################################################
+
+proc html_table_cell_end {} {
+	puts "</TD>"
+}
+
+################################################################################
+#  Tcl Procedure: html_table_header_begin
+#* Purpose:	Output the HTML to begin a table header cell
+#  Arguments:
+#arg nowrap: If not null, the text in the cell will not word wrap
+#arg align: Horizontal alignment of the data in the cell
+#arg valign: Vertical alignment of the data in the cell
+################################################################################
+
+proc html_table_header_begin {{nowrap null} {align null} {valign null}} {
+	set THELINE ""
+	append THELINE "<TH"
+	if {$align != "null"} {
+		append THELINE " ALIGN=$align"
+	}
+	if {$valign != "null"} {
+		append THELINE " VALIGN=$valign"
+	}
+	if {$nowrap != "null"} {
+		append THELINE " NOWRAP"
+	}
+	append THELINE ">"
+	puts "$THELINE"
+}
+
+################################################################################
+#  Tcl Procedure: html_table_header_end
+#* Purpose:	Output the HTML to end a table header cell
+#  Arguments:	None
+################################################################################
+
+proc html_table_header_end {} {
+	puts "</TH>"
+}
+
+################################################################################
+#  Tcl Procedure: html_br
+#* Purpose:	Output the HTML to insert a manual line break
+#  Arguments:	None
+################################################################################
+
+proc html_br {} {
+	puts "<BR>"
+}
+
+################################################################################
+#  Tcl Procedure: html_frameset_begin
+#* Purpose:	Output the HTML to begin a frameset
+#  Arguments:
+#arg rows: A Tcl list of the rows attribute of the <FRAMESET>
+#arg cols: A Tcl list of the cols attribute of the <FRAMESET>
+#arg onload: JavaScript event handler to be executed when the frameset is loaded
+################################################################################
+
+proc html_frameset_begin {{rows null} {cols null} {onload null}} {
+	set THELINE ""
+	append THELINE "<FRAMESET"
+	if {![string compare "$rows" "null"] == 0} {
+		set rowlist [join "$rows" ,]
+		append THELINE " ROWS=\"$rowlist\""
+	}
+	if {![string compare "$cols" "null"] == 0} {
+		set collist [join "$cols" ,]
+		append THELINE " COLS=\"$collist\""
+	}
+	if {![string compare "$onload" "null"] == 0} {
+		append THELINE " onLoad=\"$onload\""
+	}
+	append THELINE ">"
+	puts "$THELINE"
+}
+
+################################################################################
+#  Tcl Procedure: html_frameset_end
+#* Purpose:	Output the HTML to end the frameset
+#  Arguments:	None
+################################################################################
+
+proc html_frameset_end {} {
+	puts "</FRAMESET>"
+}
+
+################################################################################
+#  Tcl Procedure: html_frame
+#* Purpose:	Output the HTML for the defination of a frame in a frameset
+#  Arguments:
+#arg src: URL to the frame
+#arg name: Name of the frame
+#arg scrolling: Should the frame scroll? (Yes/No)
+#arg noresize: If not null, the frame is not resizable
+#arg marginheight: Height of the top margin in the frame
+#arg marginwidth: Width of the left margin in the frame
+################################################################################
+
+proc html_frame {{src null} {name null} {scrolling null} {noresize null} {marginheight null} {marginwidth null}} {
+
+	set THELINE ""
+	append THELINE "<FRAME"
+	if {![string compare "$src" "null"] == 0} {
+		append THELINE " SRC=\"$src\""
+	}
+	if {![string compare "$name" "null"] == 0} {
+		append THELINE " NAME=\"$name\""
+	}
+	if {![string compare "$scrolling" "null"] == 0} {
+		append THELINE " SCROLLING=\"$scrolling\""
+	}
+	if {![string compare "$noresize" "null"] == 0} {
+		append THELINE " NORESIZE"
+	}
+	if {![string compare "$marginheight" "null"] == 0} {
+		append THELINE " MARGINHEIGHT=\"$marginheight\""
+	}
+	if {![string compare "$marginwidth" "null"] == 0} {
+		append THELINE " MARGINWIDTH=\"$marginwidth\""
+	}
+	append THELINE ">"
+	puts "$THELINE"
+}
+
+################################################################################
+#  Tcl Procedure: html_noframes_begin
+#* Purpose:	Output the HTML to begin the definition of data to be sent to non-frames
+#*		users when a frameset document is loaded
+#  Arguments:	None
+################################################################################
+
+proc html_noframes_begin {} {
+	puts "<NOFRAMES>"
+}
+
+################################################################################
+#  Tcl Procedure: html_noframes_end
+#* Purpose:	Output the HTML to end the noframes data.
+#  Arguments:	None
+################################################################################
+
+proc html_noframes_end {} {
+	puts "</NOFRAMES>"
+}
